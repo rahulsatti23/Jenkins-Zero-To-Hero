@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'your-app-name' // The name of your Docker image
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout code from your repository
+                git 'https://github.com/your-repository.git' // Replace with your Git repository
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}")
+                }
+            }
+        }
+
+        stage('Test Docker Image') {
+            steps {
+                script {
+                    dockerImage.inside {
+                        sh 'echo Running tests inside the Docker container'
+                        // Run your tests here, for example:
+                        // sh 'mvn test'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully'
+        }
+        failure {
+            echo 'Pipeline failed'
+        }
+    }
+}
